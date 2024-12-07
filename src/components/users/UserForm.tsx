@@ -44,36 +44,56 @@ export const UserForm: React.FC<UserFormProps> = ({ userId, onClose }) => {
     return newErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = validate();
 
+    // Check for duplicate email if adding a new user
+    if (!userId) {
+      const emailExists = users.some((user) => user.email === formData.email);
+      if (emailExists) {
+        toast.error('Email is already in use!'); // Show toast error for duplicate email
+        return; // Prevent form submission if email is duplicate
+      }
+    }
+
     if (Object.keys(newErrors).length === 0) {
       if (userId) {
-        updateUser(userId, {
+        const result = await updateUser(userId, {
           name: formData.name,
           email: formData.email,
           roleId: formData.roleId
         });
-        toast.success('User updated successfully');
+        
+        if (result.success) {
+          toast.success('User updated successfully');
+          onClose();
+        } else {
+          toast.error(result.error || 'Failed to update user');
+        }
       } else {
-        addUser({
+        const result = await addUser({
           name: formData.name,
           email: formData.email,
           roleId: formData.roleId,
           isActive: true
         });
-        toast.success('User created successfully');
+        
+        if (result.success) {
+          toast.success('User created successfully');
+          onClose();
+        } else {
+          toast.error(result.error || 'Failed to create user');
+        }
       }
-      onClose();
     } else {
       setErrors(newErrors);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="relative mx-4 sm:mx-auto p-5 w-full max-w-md sm:w-96 shadow-lg rounded-md bg-gray-800 border border-gray-700">
+    <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-gray-800 border-gray-700">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-white">{userId ? 'Edit User' : 'Add User'}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-300">
@@ -82,7 +102,6 @@ export const UserForm: React.FC<UserFormProps> = ({ userId, onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name Input */}
           <div>
             <label className="block text-sm font-medium text-gray-300">Name</label>
             <input
@@ -94,7 +113,6 @@ export const UserForm: React.FC<UserFormProps> = ({ userId, onClose }) => {
             {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name}</p>}
           </div>
 
-          {/* Email Input */}
           <div>
             <label className="block text-sm font-medium text-gray-300">Email</label>
             <input
@@ -106,7 +124,6 @@ export const UserForm: React.FC<UserFormProps> = ({ userId, onClose }) => {
             {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
           </div>
 
-          {/* Password Input (Only for Adding a User) */}
           {!userId && (
             <div>
               <label className="block text-sm font-medium text-gray-300">Password</label>
@@ -120,7 +137,6 @@ export const UserForm: React.FC<UserFormProps> = ({ userId, onClose }) => {
             </div>
           )}
 
-          {/* Role Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-300">Role</label>
             <select
@@ -135,7 +151,6 @@ export const UserForm: React.FC<UserFormProps> = ({ userId, onClose }) => {
             {errors.roleId && <p className="mt-1 text-sm text-red-400">{errors.roleId}</p>}
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-4">
             <button
               type="button"

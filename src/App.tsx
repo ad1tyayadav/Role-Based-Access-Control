@@ -1,33 +1,25 @@
-import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
-import { UserList } from './components/users/UserList';
+import { DashboardStats } from './components/dashboard/DashboardStats';
+import { Analytics } from './components/Analytics';
 import { RoleList } from './components/roles/RoleList';
+import { UserList } from './components/users/UserList';
+import Footer from './components/common/Footer';
 
 function App() {
-  const [currentView, setCurrentView] = useState('users');
-
-  const renderContent = () => {
-    switch (currentView) {
-      case 'users':
-        return <UserList />;
-      case 'roles':
-        return <RoleList />;
-      case 'settings':
-        return (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Settings</h2>
-            <p className="text-gray-600">Settings panel coming soon...</p>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <Layout currentView={currentView} onNavigate={setCurrentView}>
-      {renderContent()}
-    </Layout>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="/dashboard" element={<DashboardStats />} />
+          <Route path="/users" element={<UserList />} />
+          <Route path="/roles" element={<RoleList />} />
+          <Route path="/analytics" element={<Analytics />} />
+        </Routes>
+      </Layout>
+      <Footer />
+    </Router>
   );
 }
 
